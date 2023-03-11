@@ -23,12 +23,88 @@ impl eframe::App for FractalClockApp {
     }
 }
 
+// ----------------------------------------------------------------------------
+
+#[derive(Default)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+pub struct ProductPage {
+    product: crate::components::ProductList,
+}
+
+impl  eframe::App for ProductPage {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default()
+            .frame(egui::Frame::dark_canvas(&ctx.style()))
+            .show(ctx, |ui| {
+                self.product.ui(ui);
+            });
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+#[derive(Default)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+pub struct ToolkitPage {
+    toolkit: crate::components::ToolkitBox,
+}
+
+impl  eframe::App for ToolkitPage {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default()
+            .frame(egui::Frame::dark_canvas(&ctx.style()))
+            .show(ctx, |ui| {
+                self.toolkit.ui(ui);
+            });
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+#[derive(Default)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+pub struct IndustryPage {
+    product: crate::components::IndustryContent,
+}
+
+impl  eframe::App for IndustryPage {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default()
+            .frame(egui::Frame::dark_canvas(&ctx.style()))
+            .show(ctx, |ui| {
+                self.product.ui(ui);
+            });
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+#[derive(Default)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+pub struct AboutPage {
+    about: crate::components::AboutContent,
+}
+
+impl  eframe::App for AboutPage {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default()
+            .frame(egui::Frame::dark_canvas(&ctx.style()))
+            .show(ctx, |ui| {
+                self.about.ui(ui);
+            });
+    }
+}
+
 /// The state that we persist (serialize).
 #[derive(Default)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct State {
     clock: FractalClockApp,
+    product: ProductPage,
+    toolkit: ToolkitPage,
+    industry: IndustryPage,
+    about: AboutPage,
     selected_anchor: String,
 }
 
@@ -37,9 +113,9 @@ pub struct WrapApp {
 }
 
 impl WrapApp {
-    pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         #[allow(unused_mut)]
-        let mut slf = Self {
+        let mut app = Self {
             state: State::default(),
         };
 
@@ -47,20 +123,44 @@ impl WrapApp {
         if let Some(storage) = _cc.storage {
             // 从持久化存储中恢复 App 状态
             if let Some(state) = eframe::get_value(storage, eframe::APP_KEY) {
-                slf.state = state;
+                app.state = state;
             }
         }
 
-        slf
+        // Custom fonts
+        setup_custom_fonts(&cc.egui_ctx);
+        // configure_text_styles(&cc.egui_ctx);
+
+        app
     }
 
     // Wrapp all apps into menu
     fn apps_iter_mut(&mut self) -> impl Iterator<Item = (&str, &str, &mut dyn eframe::App)> {
         let vec = vec![
             (
-                "Canstory.ai | Home",
+                "🚀 Home",
                 "home",
                 &mut self.state.clock as &mut dyn eframe::App,
+            ),
+            (
+                "👻 Rumeng App",
+                "product",
+                &mut self.state.product as &mut dyn eframe::App,
+            ),
+            (
+                "🌟 Toolkit for Creator",
+                "toolkit",
+                &mut self.state.toolkit as &mut dyn eframe::App,
+            ),
+            (
+                "🔗 AI Industry",
+                "industry",
+                &mut self.state.industry as &mut dyn eframe::App,
+            ),
+            (
+                "🙌 About",
+                "about",
+                &mut self.state.about as &mut dyn eframe::App,
             ),
         ];
 
@@ -94,11 +194,13 @@ impl eframe::App for WrapApp {
             frame.set_fullscreen(!frame.info().window_info.fullscreen);
         }
 
-        egui::TopBottomPanel::top("wrap_app_top_bar").show(ctx, |ui| {
+        egui::TopBottomPanel::bottom("wrap_app_top_bar")
+            .min_height(28.0)
+            .show(ctx, |ui| {
             egui::trace!(ui);
 
             // 渲染菜单项
-            ui.horizontal_wrapped(|ui| {
+            ui.horizontal_centered(|ui| {
                 ui.visuals_mut().button_frame = false;
                 self.bar_contents(ui, frame);
             });
@@ -154,30 +256,22 @@ impl WrapApp {
         self.state.selected_anchor = selected_anchor;
 
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            if true {
-                // TODO(emilk): fix the overlap on small screens
-                if clock_button(ui, crate::seconds_since_midnight()).clicked() {
-                    self.state.selected_anchor = "home".to_owned();
-                    if frame.is_web() {
-                        ui.output_mut(|o| o.open_url("#home"));
-                    }
-                }
-            }
-
             egui::warn_if_debug_build(ui);
         });
     }
 }
 
-fn clock_button(ui: &mut egui::Ui, seconds_since_midnight: f64) -> egui::Response {
-    let time = seconds_since_midnight;
-    let time = format!(
-        "{:02}:{:02}:{:02}.{:02}",
-        (time % (24.0 * 60.0 * 60.0) / 3600.0).floor(),
-        (time % (60.0 * 60.0) / 60.0).floor(),
-        (time % 60.0).floor(),
-        (time % 1.0 * 100.0).floor()
-    );
+fn setup_custom_fonts(ctx: &egui::Context) {
+    let mut fonts = egui::FontDefinitions::default();
 
-    ui.button(egui::RichText::new(time).monospace())
+    fonts.font_data.insert("CascadiaCode".to_owned(), egui::FontData::from_static(
+        include_bytes!("../assets/fonts/CascadiaCode.ttf")
+    ));
+
+    fonts.families
+        .entry(egui::FontFamily::Monospace)
+        .or_default()
+        .insert(0, "CascadiaCode".to_owned());
+
+    ctx.set_fonts(fonts);
 }

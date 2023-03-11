@@ -21,11 +21,11 @@ impl Default for FractalClock {
         Self {
             paused: false,
             time: 0.0,
-            zoom: 0.6,
+            zoom: 0.12,
             start_line_width: 2.5,
-            depth: 9,
-            length_factor: 0.8,
-            luminance_factor: 0.8,
+            depth: 7,
+            length_factor: 1.0,
+            luminance_factor: 0.68,
             width_factor: 0.9,
             line_count: 0,
         }
@@ -48,45 +48,62 @@ impl FractalClock {
         // Make sure we allocate what we used (everything)
         ui.expand_to_include_rect(painter.clip_rect());
 
-        Frame::popup(ui.style())
-            .stroke(Stroke::NONE)
-            .show(ui, |ui| {
-                ui.set_max_width(270.0);
-                CollapsingHeader::new("Settings")
-                    .show(ui, |ui| self.options_ui(ui, seconds_since_midnight));
-            });
+        // Frame::popup(ui.style())
+        //     .stroke(Stroke::NONE)
+        //     .show(ui, |ui| {
+        //         ui.set_max_width(270.0);
+        //         CollapsingHeader::new("Settings")
+        //             .show(ui, |ui| self.options_ui(ui, seconds_since_midnight));
+        //     });
+
+        // Company Vision
+        egui::Window::new("Our Vision")
+            .auto_sized()
+            .anchor(egui::Align2::LEFT_CENTER, [100.0, 300.0])
+            .show(ui.ctx(), |ui| {
+                ui.heading("> Homo Sapiens can tell stories.");
+                ui.add_space(2.0);
+                ui.heading("> So, can AI tell good stories?");
+                ui.add_space(20.0);
+
+                ui.horizontal_wrapped(|ui| {
+                    ui.heading("> We are exploring. ");
+                    ui.hyperlink_to("🚀 Join Canstory Team", "team.canstory.ai");
+                });
+                
+        });
     }
 
-    fn options_ui(&mut self, ui: &mut Ui, seconds_since_midnight: Option<f64>) {
-        if seconds_since_midnight.is_some() {
-            ui.label(format!(
-                "Local time: {:02}:{:02}:{:02}.{:03}",
-                (self.time % (24.0 * 60.0 * 60.0) / 3600.0).floor(),
-                (self.time % (60.0 * 60.0) / 60.0).floor(),
-                (self.time % 60.0).floor(),
-                (self.time % 1.0 * 100.0).floor()
-            ));
-        } else {
-            ui.label("The fractal_clock clock is not showing the correct time");
-        };
-        ui.label(format!("Painted line count: {}", self.line_count));
+    // fn options_ui(&mut self, ui: &mut Ui, seconds_since_midnight: Option<f64>) {
+    //     if seconds_since_midnight.is_some() {
+    //         ui.label(format!(
+    //             "Local time: {:02}:{:02}:{:02}.{:03}",
+    //             (self.time % (24.0 * 60.0 * 60.0) / 3600.0).floor(),
+    //             (self.time % (60.0 * 60.0) / 60.0).floor(),
+    //             (self.time % 60.0).floor(),
+    //             (self.time % 1.0 * 100.0).floor()
+    //         ));
+    //     } else {
+    //         ui.label("The fractal_clock clock is not showing the correct time");
+    //     };
+    //     ui.label(format!("Painted line count: {}", self.line_count));
 
-        ui.checkbox(&mut self.paused, "Paused");
-        ui.add(Slider::new(&mut self.zoom, 0.0..=1.0).text("zoom"));
-        ui.add(Slider::new(&mut self.start_line_width, 0.0..=5.0).text("Start line width"));
-        ui.add(Slider::new(&mut self.depth, 0..=14).text("depth"));
-        ui.add(Slider::new(&mut self.length_factor, 0.0..=1.0).text("length factor"));
-        ui.add(Slider::new(&mut self.luminance_factor, 0.0..=1.0).text("luminance factor"));
-        ui.add(Slider::new(&mut self.width_factor, 0.0..=1.0).text("width factor"));
+    //     ui.checkbox(&mut self.paused, "Paused");
+    //     ui.add(Slider::new(&mut self.zoom, 0.0..=1.0).text("zoom"));
+    //     ui.add(Slider::new(&mut self.start_line_width, 0.0..=5.0).text("Start line width"));
+    //     ui.add(Slider::new(&mut self.depth, 0..=14).text("depth"));
+    //     ui.add(Slider::new(&mut self.length_factor, 0.0..=1.0).text("length factor"));
+    //     ui.add(Slider::new(&mut self.luminance_factor, 0.0..=1.0).text("luminance factor"));
+    //     ui.add(Slider::new(&mut self.width_factor, 0.0..=1.0).text("width factor"));
 
-        egui::reset_button(ui, self);
+    //     egui::reset_button(ui, self);
 
-        ui.hyperlink_to(
-            "Inspired by a screensaver by Rob Mayoff",
-            "http://www.dqd.com/~mayoff/programs/FractalClock/",
-        );
-        // ui.add(egui_demo_lib::egui_github_link_file!());
-    }
+    //     ui.hyperlink_to(
+    //         "Inspired by a screensaver by Rob Mayoff",
+    //         "http://www.dqd.com/~mayoff/programs/FractalClock/",
+    //     );
+    //     // ui.add(egui_demo_lib::egui_github_link_file!());
+    // }
 
     fn paint(&mut self, painter: &Painter) {
         struct Hand {
