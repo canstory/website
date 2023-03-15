@@ -19,7 +19,7 @@ pub struct ToolkitBox {
 impl Default for ToolkitBox {
     fn default() -> Self {
         Self {
-            show_docs: false,
+            show_docs: true,
         }
     }
 }
@@ -37,14 +37,21 @@ impl ToolkitBox {
                         ui.label("🌟 Toolkit for Creator");
                         ui.separator();
                         if ui.button("Can Storyboard").clicked() {
-                            self.show_docs = true;
+                            self.show_docs = !self.show_docs;
                         };
+
+                        ui.add_space(20.0);
+                        ui.label("Apps - Powered by OpenAI");
+                        ui.separator();
+                        ui.hyperlink_to("Chatext Servers", "http://chatext.canstory.ai/");
                     });
                
             });
             egui::CentralPanel::default().show(ui.ctx(), |ui| {
                 let mut editor_app = EasyMarkApp::default();
-                editor_app.editor.ui(ui);
+                if self.show_docs {
+                    editor_app.editor.ui(ui);
+                }
             });
         });
         

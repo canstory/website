@@ -45,7 +45,7 @@ impl AboutContent {
                     "Founder, a Rust engineer and entrepreneur, aged 30."
                 ));
                 ui.add_space(12.0); // ui.separator();
-                ui.hyperlink_to("Send him an email", "");
+                ui.hyperlink_to("Send him an email", "mailto:lone@canstory.ai");
             });
     }
 }
@@ -58,6 +58,6 @@ fn links(ui: &mut egui::Ui) {
     );
     ui.hyperlink_to(
         format!("{} @cantory", TWITTER),
-        "https://twitter.com/cantory",
+        "https://twitter.com/canstory_ai",
     );
 }
